@@ -20,6 +20,7 @@ import com.revrobotics.spark.SparkMax;
 
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.Timer;
@@ -128,6 +129,12 @@ public class SwerveModule {
     //get the angle from the main encoder
     public Rotation2d getAngle(){
         return Rotation2d.fromDegrees(angleEncoder.getPosition());
+    }
+    public SwerveModuleState getState(){
+        return new SwerveModuleState(driveEncoder.getVelocity(), getAngle());
+    }
+    public SwerveModulePosition getPosition(){
+        return new SwerveModulePosition(driveEncoder.getPosition(), getAngle());
     }
 
     private void configureMotors(){
