@@ -50,16 +50,6 @@ public class Constants {
         /* Slew rate limits for joystick inputs. lower numbers = smoother driving, higher numbers = more responsive*/
         public static final double translationSlewRateLimit = 3;
         public static final double rotationSlewRateLimit = 3;
-
-
-        //give location of each module relative to robot center in meters to a swerveDriveKinematics
-        //this is the x,y coordinate of each wheel. 
-        public static final SwerveDriveKinematics swerveKinematics = new SwerveDriveKinematics(
-        new Translation2d(halfWheelBase, halfTrackWidth), 
-        new Translation2d(-halfWheelBase, halfTrackWidth),
-        new Translation2d(-halfWheelBase, -halfTrackWidth),
-        new Translation2d(halfWheelBase, -halfTrackWidth)
-        );
         
 
         /* Drive Motor Voltage Compensation */
@@ -89,38 +79,48 @@ public class Constants {
         public static final boolean angleMotorInvert = false;
         public static final boolean driveMotorInvert = false;
 
-        /* Module Specific Constants */
-        /* Front Left Module - Module 0 */
-        public static final class Mod0 {
-        public static final int driveMotorID = 3; 
-        public static final int angleMotorID = 2; 
-        public static final int encoderID = 11;
-        public static final double angleOffset = 160.2;
-        }
+        public enum ModuleLocation{
+            FRONT_LEFT(new Translation2d(halfTrackWidth, halfWheelBase)),
+            BACK_LEFT(new Translation2d(-halfTrackWidth, halfWheelBase)),
+            BACK_RIGHT(new Translation2d(-halfTrackWidth, -halfWheelBase)),
+            FRONT_RIGHT(new Translation2d(halfTrackWidth, -halfWheelBase));
 
-        /* Back Left Module - Module 1 */
-        public static final class Mod1 {
-        public static final int driveMotorID = 5;
-        public static final int angleMotorID = 4;
-        public static final int encoderID = 12;
-        public static final double angleOffset = 117.2;
+            public final Translation2d position;
+            ModuleLocation(Translation2d position) {
+                this.position = position;
+            }
         }
+        public record ModuleData(
+            int driveMotorID, int angleMotorID, int encoderID, double angleOffset, ModuleLocation location
+        ){
+            public Translation2d getLocation(){
+                return location.position;
+            }
+        }
+        
+        public static ModuleData[] moduleData = {
+            //Module 0: Front Left
+            new ModuleData(3, 2, 11, 160.2, ModuleLocation.FRONT_LEFT),
 
-        /* Back Right Module - Module 2 */
-        public static final class Mod2 {
-        public static final int driveMotorID = 7;
-        public static final int angleMotorID = 6;
-        public static final int encoderID = 13;
-        public static final double angleOffset = 141;
-        }
+            //Module 1: Back Left
+            new ModuleData(5, 4, 12, 117.2, ModuleLocation.BACK_LEFT),
 
-        /* Front Right Module - Module 3 */
-        public static final class Mod3 {
-        public static final int driveMotorID = 9;
-        public static final int angleMotorID = 8;
-        public static final int encoderID = 14;
-        public static final double angleOffset = -138;
-        }
+            //Module 2: Back Right
+            new ModuleData(7, 6, 13, 141, ModuleLocation.BACK_RIGHT),
+
+            //Module 3: Front RIght
+            new ModuleData(9, 8, 14, -138, ModuleLocation.FRONT_RIGHT),
+        };
+
+       //give location of each module relative to robot center in meters to a swerveDriveKinematics
+        //this is the x,y coordinate of each wheel. 
+        public static final SwerveDriveKinematics swerveKinematics = new SwerveDriveKinematics(
+            moduleData[0].getLocation(), 
+            moduleData[1].getLocation(),
+            moduleData[2].getLocation(),
+            moduleData[3].getLocation()
+        );
+       
     }
     
     public class AutoConstants {
@@ -131,13 +131,12 @@ public class Constants {
                             DCMotor.getNeoVortex(1).withReduction(SwerveConstants.driveGearRatio),
                             SwerveConstants.driveContinuousCurrentLimit,
                             1);
-        static double length = SwerveConstants.halfWheelBase;
-        static double width = SwerveConstants.halfTrackWidth;
+        
         public static final RobotConfig ppConfig = new RobotConfig(75,6.8,ppModuleConfig, 
-            new Translation2d(length, width), 
-            new Translation2d(-length, width),
-            new Translation2d(-length, -width),
-            new Translation2d(length, -width));
+            SwerveConstants.moduleData[0].getLocation(),
+            SwerveConstants.moduleData[1].getLocation(),
+            SwerveConstants.moduleData[2].getLocation(),
+            SwerveConstants.moduleData[3].getLocation());
 
         public static final PPHolonomicDriveController ppSwerveController = new PPHolonomicDriveController(
             new PIDConstants(5.0, 0.00001, 0.0), // Translation PID constants for path following
@@ -160,7 +159,7 @@ public class Constants {
         
         public static Rotation2d flipForAlliance(Rotation2d rotation){
             if(isRedAlliance()){
-                return rotation.plus(Rotation2d.k180deg);
+                return Rotation2d.fromDegrees(rotation.getDegrees() + 180);
             }else{
                 return rotation;
             }

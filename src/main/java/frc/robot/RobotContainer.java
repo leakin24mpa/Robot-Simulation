@@ -33,10 +33,10 @@ public class RobotContainer {
 
   public Command getAutonomousCommand() {
     return new SequentialCommandGroup(
-          drive.setStartingPose(new Pose2d(2, 7, Rotation2d.fromDegrees(0))),
-          
+          drive.setStartingPose(new Pose2d(2, 7, Rotation2d.fromDegrees(180))),
           drive.autoDrive("Pathy McPathFace"),
-          drive.autoDrive("Path2"));
+          drive.autoDrive("Path2")
+          );
     //return new PathPlannerAuto("test");
   }
 }

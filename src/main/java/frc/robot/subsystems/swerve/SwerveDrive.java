@@ -26,11 +26,9 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.lib.LimelightHelpers;
 import frc.lib.LimelightHelpers.PoseEstimate;
 import frc.robot.Constants.AutoConstants;
+import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.SwerveConstants;
-import frc.robot.Constants.SwerveConstants.Mod0;
-import frc.robot.Constants.SwerveConstants.Mod1;
-import frc.robot.Constants.SwerveConstants.Mod2;
-import frc.robot.Constants.SwerveConstants.Mod3;
+import frc.robot.Constants.SwerveConstants.ModuleData;
 
 public class SwerveDrive extends SubsystemBase {
 
@@ -42,6 +40,7 @@ public class SwerveDrive extends SubsystemBase {
 
   private final StructArrayPublisher<SwerveModuleState> desiredSwerveDataPublisher = NetworkTableInstance.getDefault()
   .getStructArrayTopic("Desired Swerve States", SwerveModuleState.struct).publish();
+
   private final SwerveDrivePoseEstimator odometry;
   private final Field2d field;
   /** Creates a new SwerveDrive. */
@@ -52,12 +51,12 @@ public class SwerveDrive extends SubsystemBase {
     gyro.getConfigurator().apply(new Pigeon2Configuration());
 
     //A list of the 4 swerve modules
-    swerveModules = new SwerveModule[] {
-      new SwerveModule(0, Mod0.driveMotorID, Mod0.angleMotorID, Mod0.encoderID, Mod0.angleOffset),
-      new SwerveModule(1, Mod1.driveMotorID, Mod1.angleMotorID, Mod1.encoderID, Mod1.angleOffset),
-      new SwerveModule(2, Mod2.driveMotorID, Mod2.angleMotorID, Mod2.encoderID, Mod2.angleOffset),
-      new SwerveModule(3, Mod3.driveMotorID, Mod3.angleMotorID, Mod3.encoderID, Mod3.angleOffset),
-    };
+    swerveModules = new SwerveModule[4];
+    for(int i = 0; i < 4; i++){
+      ModuleData data = SwerveConstants.moduleData[i];
+      swerveModules[i] = new SwerveModule(i,data.driveMotorID(), data.angleMotorID(), data.encoderID(), data.angleOffset());
+    }
+
     //set the gyro heading to zero to start
     zeroGyro();
     odometry = new SwerveDrivePoseEstimator(SwerveConstants.swerveKinematics, getYaw(), getAllModulePositions(), new Pose2d());
@@ -74,14 +73,19 @@ public class SwerveDrive extends SubsystemBase {
       (speeds, feedforwards) -> driveFromChassisSpeeds(speeds, true),
       AutoConstants.ppSwerveController,
       AutoConstants.ppConfig,
-      () -> false,
+      FieldConstants::isRedAlliance,
       this
     );
   }
   //For FRC games its sometimes useful to have this match your alliance side, so on blue it resets to 0 ,
   // but on red it resets to 180
   public void zeroGyro(){
-    gyro.setYaw(0);
+    if(FieldConstants.isRedAlliance()){
+      gyro.setYaw(180);
+    }
+    else{
+      gyro.setYaw(0);
+    }
   }
   //get the output of the pigeon2 as a rotation2d
   public Rotation2d getYaw(){
@@ -93,7 +97,7 @@ public class SwerveDrive extends SubsystemBase {
     }
   }
   public void setRobotPose(Pose2d pose){
-    gyro.setYaw(pose.getRotation().getDegrees());
+    gyro.setYaw(pose.getRotation().getMeasure());
     odometry.resetPosition(pose.getRotation(), getAllModulePositions(), pose);
   }
   public Pose2d getRobotPose(){
@@ -126,7 +130,7 @@ public class SwerveDrive extends SubsystemBase {
   }
   
   public Command setStartingPose(Pose2d pose){
-    return runOnce(() -> setRobotPose(pose));
+    return runOnce(() -> setRobotPose(FieldConstants.flipForAlliance(pose)));
   }
   public Command autoDrive(String filename){
     try{
