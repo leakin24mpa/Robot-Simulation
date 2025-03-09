@@ -3,6 +3,7 @@ package frc.robot.subsystems.elevator;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
@@ -12,10 +13,11 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ElevatorConstants;
 import frc.robot.subsystems.elevator.elevatorIO.ElevatorIO;
+import frc.robot.subsystems.elevator.elevatorIO.NeoElevatorIO;
 import frc.robot.subsystems.elevator.elevatorIO.SimElevatorIO;
 
 public class Elevator extends SubsystemBase{
-    private ElevatorIO elevatorIO = new SimElevatorIO();
+    private ElevatorIO elevatorIO; 
     private PIDController pid = ElevatorConstants.PID;
     private ElevatorFeedforward feedforward = ElevatorConstants.feedforward;
     private TrapezoidProfile profile = new TrapezoidProfile(ElevatorConstants.constraints);
@@ -30,6 +32,12 @@ public class Elevator extends SubsystemBase{
     private MechanismLigament2d elevatorLigament = root.append(new MechanismLigament2d("elevator", 1, 90));
 
     public Elevator(){
+        if(RobotBase.isSimulation()){
+            elevatorIO = new SimElevatorIO();
+        }
+        else{
+            elevatorIO = new NeoElevatorIO();
+        }
         elevatorIO.resetPosition(0);
         setpoint = elevatorIO.getPosition();
         endState = new TrapezoidProfile.State(setpoint, 0);
