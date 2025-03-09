@@ -23,7 +23,7 @@ import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.Timer;
 import frc.lib.CANSparkUtil;
 import frc.lib.CANSparkUtil.Usage;
-import frc.robot.subsystems.swerve.SwerveConstants;
+import frc.robot.SwerveConstants;
 
 public class NeoModuleIO implements SwerveModuleIO{
     private final SparkFlex driveMotor;

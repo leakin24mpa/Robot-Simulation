@@ -4,9 +4,12 @@
 
 package frc.robot;
 
+
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import frc.robot.commands.TeleopSwerve;
 import frc.robot.subsystems.swerve.SwerveDrive;
@@ -29,6 +32,11 @@ public class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    return Commands.print("No autonomous command configured");
+    return new SequentialCommandGroup(
+          drive.setStartingPose(new Pose2d(2, 7, Rotation2d.fromDegrees(0))),
+          
+          drive.autoDrive("Pathy McPathFace"),
+          drive.autoDrive("Path2"));
+    //return new PathPlannerAuto("test");
   }
 }

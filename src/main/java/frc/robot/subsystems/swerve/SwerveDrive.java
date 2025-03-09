@@ -6,6 +6,8 @@ package frc.robot.subsystems.swerve;
 
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.Pigeon2;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.PathPlannerPath;
 
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -16,15 +18,19 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.lib.LimelightHelpers;
 import frc.lib.LimelightHelpers.PoseEstimate;
-import frc.robot.subsystems.swerve.SwerveConstants.Mod0;
-import frc.robot.subsystems.swerve.SwerveConstants.Mod1;
-import frc.robot.subsystems.swerve.SwerveConstants.Mod2;
-import frc.robot.subsystems.swerve.SwerveConstants.Mod3;
+import frc.robot.AutoConstants;
+import frc.robot.SwerveConstants;
+import frc.robot.SwerveConstants.Mod0;
+import frc.robot.SwerveConstants.Mod1;
+import frc.robot.SwerveConstants.Mod2;
+import frc.robot.SwerveConstants.Mod3;
 
 public class SwerveDrive extends SubsystemBase {
 
@@ -54,8 +60,23 @@ public class SwerveDrive extends SubsystemBase {
     };
     //set the gyro heading to zero to start
     zeroGyro();
-    odometry = new SwerveDrivePoseEstimator(SwerveConstants.swerveKinematics, getYaw(), null, null);
+    odometry = new SwerveDrivePoseEstimator(SwerveConstants.swerveKinematics, getYaw(), getAllModulePositions(), new Pose2d());
     field = new Field2d();
+
+    configurePathPlanner();
+  }
+  
+  public void configurePathPlanner(){
+    AutoBuilder.configure(
+      this::getRobotPose,
+      this::setRobotPose,
+      this::getChassisSpeeds,
+      (speeds, feedforwards) -> driveFromChassisSpeeds(speeds, true),
+      AutoConstants.ppSwerveController,
+      AutoConstants.ppConfig,
+      () -> false,
+      this
+    );
   }
   //For FRC games its sometimes useful to have this match your alliance side, so on blue it resets to 0 ,
   // but on red it resets to 180
@@ -104,6 +125,20 @@ public class SwerveDrive extends SubsystemBase {
     driveFromChassisSpeeds(desiredSpeeds, true);
   }
   
+  public Command setStartingPose(Pose2d pose){
+    return runOnce(() -> setRobotPose(pose));
+  }
+  public Command autoDrive(String filename){
+    try{
+      PathPlannerPath path = PathPlannerPath.fromPathFile(filename);
+      return AutoBuilder.followPath(path);
+    }
+    catch(Exception e){
+      DriverStation.reportError("The path is not pathing: " + e.getMessage(), e.getStackTrace());
+      return null;
+    }
+  }
+
   public SwerveModuleState[] getStates(){
     SwerveModuleState[] states = new SwerveModuleState[4];
     for(SwerveModule module : swerveModules){
@@ -125,11 +160,16 @@ public class SwerveDrive extends SubsystemBase {
       module.setDesiredState(desiredStates[module.moduleNumber], isOpenLoop);
     }
   }
-  
+
+  public ChassisSpeeds getChassisSpeeds(){
+    return SwerveConstants.swerveKinematics.toChassisSpeeds(getStates());
+  }
   private void updateOdometryWithVision(){
     LimelightHelpers.SetRobotOrientation("limelight", getYaw().getDegrees(),0, 0, 0, 0, 0);
     PoseEstimate estimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
-
+    if(estimate == null){
+      return;
+    }
     if(estimate.tagCount >= 1 && estimate.rawFiducials[0].ambiguity < 0.5){
       odometry.addVisionMeasurement(estimate.pose, estimate.timestampSeconds);
     }
@@ -138,6 +178,7 @@ public class SwerveDrive extends SubsystemBase {
   @Override
   public void periodic(){
     odometry.update(getYaw(), getAllModulePositions());
+    
     updateOdometryWithVision();
     
     field.setRobotPose(getRobotPose());
