@@ -11,6 +11,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.swerve.SwerveConstants.Mod0;
 import frc.robot.subsystems.swerve.SwerveConstants.Mod1;
@@ -22,6 +24,11 @@ public class SwerveDrive extends SubsystemBase {
   private final SwerveModule[] swerveModules;
   private final Pigeon2 gyro;
 
+  private final StructArrayPublisher<SwerveModuleState> swerveDataPublisher = NetworkTableInstance.getDefault()
+.getStructArrayTopic("Swerve States", SwerveModuleState.struct).publish();
+
+  private final StructArrayPublisher<SwerveModuleState> desiredSwerveDataPublisher = NetworkTableInstance.getDefault()
+  .getStructArrayTopic("Desired Swerve States", SwerveModuleState.struct).publish();
   /** Creates a new SwerveDrive. */
   public SwerveDrive() {
     //A pigeon2 gyro
@@ -71,6 +78,13 @@ public class SwerveDrive extends SubsystemBase {
     driveFromChassisSpeeds(desiredSpeeds, true);
   }
   
+  public SwerveModuleState[] getStates(){
+    SwerveModuleState[] states = new SwerveModuleState[4];
+    for(SwerveModule module : swerveModules){
+      states[module.moduleNumber] = module.getState();
+    }
+    return states;
+  }
   //this function drives the robot at a given ChassisSpeeds. it can be used with a joystick or with pathplanner to control the robot
   public void driveFromChassisSpeeds(ChassisSpeeds driveSpeeds, boolean isOpenLoop){
     //calculate the list of speeds and directions for each swerve module that will make the robot drive at the desired speed
@@ -78,10 +92,18 @@ public class SwerveDrive extends SubsystemBase {
     //if any motor is going too fast, scale back all the motors speeds to keep them in sync
     SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, SwerveConstants.maxSpeed);
 
+    desiredSwerveDataPublisher.set(desiredStates);
 
     //set each module to drive at its corresponding speed and direction
     for(SwerveModule module : swerveModules){
       module.setDesiredState(desiredStates[module.moduleNumber], isOpenLoop);
     }
+  }
+  @Override
+  public void periodic(){
+    for(SwerveModule module : swerveModules){
+      module.update();
+    }
+    swerveDataPublisher.set(getStates());
   }
 }
