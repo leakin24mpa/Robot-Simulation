@@ -4,6 +4,9 @@ import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -22,13 +25,17 @@ public class Elevator extends SubsystemBase{
     private TrapezoidProfile.State startState;
     private Timer timer = new Timer();
 
+    private Mechanism2d elevatorVisual = new Mechanism2d(3,3);
+    private MechanismRoot2d root = elevatorVisual.getRoot("root", 2,0);
+    private MechanismLigament2d elevatorLigament = root.append(new MechanismLigament2d("elevator", 1, 90));
+
     public Elevator(){
         elevatorIO.resetPosition(0);
         setpoint = elevatorIO.getPosition();
         endState = new TrapezoidProfile.State(setpoint, 0);
         startState = endState;
 
-
+        SmartDashboard.putData("Elevator", elevatorVisual);
 
     }
 
@@ -75,6 +82,7 @@ public class Elevator extends SubsystemBase{
     public void periodic(){
         moveTowardsSetpoint();
         elevatorIO.update();
+        elevatorLigament.setLength(1 + elevatorIO.getPosition());
         
     }
 }
