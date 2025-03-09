@@ -8,10 +8,12 @@ package frc.robot;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import frc.robot.commands.TeleopSwerve;
+import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.swerve.SwerveDrive;
 
 public class RobotContainer {
@@ -21,9 +23,12 @@ public class RobotContainer {
 
   //Create a SwerveDrive
   private final SwerveDrive drive = new SwerveDrive();
+  private final Elevator elevator = new Elevator();
 
   public RobotContainer() {
     configureBindings();
+    SmartDashboard.putData("Setpoint -> 2", elevator.setSetpoint(2));
+    SmartDashboard.putData("Setpoint -> 0", elevator.setSetpoint(0));
   }
 
   private void configureBindings() {

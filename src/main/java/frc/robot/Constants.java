@@ -5,11 +5,14 @@ import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
+import edu.wpi.first.math.controller.ElevatorFeedforward;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -141,6 +144,38 @@ public class Constants {
         public static final PPHolonomicDriveController ppSwerveController = new PPHolonomicDriveController(
             new PIDConstants(5.0, 0.00001, 0.0), // Translation PID constants for path following
             new PIDConstants(5.0, 0.0005, 0.001));
+
+    }
+    public class ElevatorConstants{
+        public static final int elevatorMotorID = 0;
+        public static final int upperLimitID = 0;
+        public static final int lowerLimitID = 1;
+
+        public static final double minPosition = 0;
+        public static final double maxPosition = 2;
+
+        public static final double gearRatio = 20.0;
+        public static final double spoolRadius = 0.01;
+        public static final double spoolCircumference = 2 * Math.PI * spoolRadius;
+        public static final double positionConversionFactor = spoolCircumference * gearRatio / 360;
+        public static final double velocityConversionFactor = spoolCircumference * gearRatio / 60;
+
+        public static double kP = 20;
+        public static double kI = 0;
+        public static double kD = 0;
+
+        public static PIDController PID = new PIDController(kP, kI, kD);
+
+        public static double kS = 0;
+        public static double kG = 0.0045;
+        public static double kV = 3.4;
+
+        public static ElevatorFeedforward feedforward = new ElevatorFeedforward(kS, kG, kV);
+
+        public static double maxVelocity = 0.25;
+        public static double maxAcceleration = 1.0;
+
+        public static Constraints constraints = new Constraints(maxVelocity, maxAcceleration);
 
     }
 
