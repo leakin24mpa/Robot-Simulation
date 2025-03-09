@@ -8,7 +8,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
-import frc.robot.SwerveConstants;
+import frc.robot.Constants.SwerveConstants;
 
 public class SimModuleIO implements SwerveModuleIO{
     private final DCMotor driveMotor = DCMotor.getNeoVortex(1);
