@@ -7,13 +7,20 @@ package frc.robot.subsystems.swerve;
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.Pigeon2;
 
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.lib.LimelightHelpers;
+import frc.lib.LimelightHelpers.PoseEstimate;
 import frc.robot.subsystems.swerve.SwerveConstants.Mod0;
 import frc.robot.subsystems.swerve.SwerveConstants.Mod1;
 import frc.robot.subsystems.swerve.SwerveConstants.Mod2;
@@ -29,6 +36,8 @@ public class SwerveDrive extends SubsystemBase {
 
   private final StructArrayPublisher<SwerveModuleState> desiredSwerveDataPublisher = NetworkTableInstance.getDefault()
   .getStructArrayTopic("Desired Swerve States", SwerveModuleState.struct).publish();
+  private final SwerveDrivePoseEstimator odometry;
+  private final Field2d field;
   /** Creates a new SwerveDrive. */
   public SwerveDrive() {
     //A pigeon2 gyro
@@ -45,6 +54,8 @@ public class SwerveDrive extends SubsystemBase {
     };
     //set the gyro heading to zero to start
     zeroGyro();
+    odometry = new SwerveDrivePoseEstimator(SwerveConstants.swerveKinematics, getYaw(), null, null);
+    field = new Field2d();
   }
   //For FRC games its sometimes useful to have this match your alliance side, so on blue it resets to 0 ,
   // but on red it resets to 180
@@ -60,7 +71,22 @@ public class SwerveDrive extends SubsystemBase {
       return Rotation2d.fromDegrees(360 - gyro.getYaw().getValueAsDouble());
     }
   }
-  
+  public void setRobotPose(Pose2d pose){
+    gyro.setYaw(pose.getRotation().getDegrees());
+    odometry.resetPosition(pose.getRotation(), getAllModulePositions(), pose);
+  }
+  public Pose2d getRobotPose(){
+    return odometry.getEstimatedPosition();
+  }
+
+  //get an array conataining all four modules' positions
+  private SwerveModulePosition[] getAllModulePositions(){
+    SwerveModulePosition[] allPositions = new SwerveModulePosition[4]; //array of 4 positions
+    for(SwerveModule module : swerveModules){
+      allPositions[module.moduleNumber] = module.getPosition();
+    }
+    return allPositions;
+  }
 
   public void teleopDrive(double xInput, double yInput, double rotationInput, boolean isFieldOriented){
 
@@ -99,11 +125,27 @@ public class SwerveDrive extends SubsystemBase {
       module.setDesiredState(desiredStates[module.moduleNumber], isOpenLoop);
     }
   }
+  
+  private void updateOdometryWithVision(){
+    LimelightHelpers.SetRobotOrientation("limelight", getYaw().getDegrees(),0, 0, 0, 0, 0);
+    PoseEstimate estimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
+
+    if(estimate.tagCount >= 1 && estimate.rawFiducials[0].ambiguity < 0.5){
+      odometry.addVisionMeasurement(estimate.pose, estimate.timestampSeconds);
+    }
+  }
+
   @Override
   public void periodic(){
+    odometry.update(getYaw(), getAllModulePositions());
+    updateOdometryWithVision();
+    
+    field.setRobotPose(getRobotPose());
+    SmartDashboard.putData("Field", field);
     for(SwerveModule module : swerveModules){
       module.update();
     }
     swerveDataPublisher.set(getStates());
+    
   }
 }
