@@ -48,19 +48,18 @@ public class Elevator extends SubsystemBase{
     }
 
     private void moveTowardsSetpoint(){
-        SmartDashboard.putNumber("Elevator Setpoint", setpoint);
-        
         TrapezoidProfile.State desiredState = profile.calculate(timer.get(), startState, endState);
+
+        
+        double output = feedforward.calculate(desiredState.velocity) + pid.calculate(elevatorIO.getPosition(), desiredState.position);
+        
+        SmartDashboard.putNumber("Elevator Setpoint", setpoint);
 
         SmartDashboard.putNumber("Elevator Desired Velocity", desiredState.velocity);
         SmartDashboard.putNumber("Elevator Desired Position", desiredState.position);
 
         SmartDashboard.putNumber("Elevator Actual Velocity", elevatorIO.getVelocity());
         SmartDashboard.putNumber("Elevator Actual Position", elevatorIO.getPosition());
-
-        
-
-        double output = feedforward.calculate(desiredState.velocity) + pid.calculate(elevatorIO.getPosition(), desiredState.position);
 
         SmartDashboard.putNumber("Elevator Motor Output", output);
 

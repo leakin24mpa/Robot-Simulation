@@ -154,39 +154,51 @@ public class Constants {
         public static final double minPosition = 0;
         public static final double maxPosition = 2;
 
-        public static final double gearRatio = 20.0;
+        public static final double gearRatio = 3.0;
         public static final double spoolRadius = 0.01;
         public static final double spoolCircumference = 2 * Math.PI * spoolRadius;
         public static final double positionConversionFactor = spoolCircumference * gearRatio / 360;
         public static final double velocityConversionFactor = spoolCircumference * gearRatio / 60;
 
-        public static double kP = 20;
+        public static double kP = 5;
         public static double kI = 0;
         public static double kD = 0;
 
         public static PIDController PID = new PIDController(kP, kI, kD);
 
         public static double kS = 0;
-        public static double kG = 0.0045;
-        public static double kV = 3.4;
+        public static double kG = 0.0753;
+        public static double kV = 0.53;
 
         public static ElevatorFeedforward feedforward = new ElevatorFeedforward(kS, kG, kV);
 
-        public static double maxVelocity = 0.25;
-        public static double maxAcceleration = 1.0;
+        public static double maxVelocity = 3.5;
+        public static double maxAcceleration = 0.8;
 
         public static Constraints constraints = new Constraints(maxVelocity, maxAcceleration);
 
     }
+    public class WristConstants{
+        public static final int motorID = 0;
+
+        public static final double gearRatio = 100;
+        
+        public static final double kP = 0.005;
+        public static final double kI = 0.001;
+        public static final double kD = 0;
+        public static final PIDController PID = new PIDController(kP, kI, kD);
+
+
+    }
 
     public class FieldConstants {
-        public static double FIELD_LENGTH = 17.54824934;
-        public static double FIELD_WIDTH = 8.052;
+        public static final double FIELD_LENGTH = 17.54824934;
+        public static final double FIELD_WIDTH = 8.052;
 
-        public static Translation2d BLUE_REEF_CENTER = new Translation2d(4.48933684,4.02587697);
+        public static final Translation2d BLUE_REEF_CENTER = new Translation2d(4.48933684,4.02587697);
 
-        public static Rotation2d RIGHT_CORAL_STATION_ANGLE = Rotation2d.fromDegrees(234.011392);
-        public static Rotation2d LEFT_CORAL_STATION_ANGLE = Rotation2d.fromDegrees(-234.011392);
+        public static final Rotation2d RIGHT_CORAL_STATION_ANGLE = Rotation2d.fromDegrees(234.011392);
+        public static final Rotation2d LEFT_CORAL_STATION_ANGLE = Rotation2d.fromDegrees(-234.011392);
 
         public static boolean isRedAlliance(){
             return DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red;

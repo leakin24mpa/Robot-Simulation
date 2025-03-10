@@ -11,7 +11,7 @@ public class SimElevatorIO implements ElevatorIO{
     private ElevatorSim sim = new ElevatorSim(
         LinearSystemId.createElevatorSystem(
             elevatorMotor,
-            3,
+            6,
             ElevatorConstants.spoolRadius,
             ElevatorConstants.gearRatio
         ), null, ElevatorConstants.minPosition,ElevatorConstants.maxPosition, true, 0);

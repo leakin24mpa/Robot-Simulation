@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import frc.robot.commands.TeleopSwerve;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.swerve.SwerveDrive;
+import frc.robot.subsystems.wrist.Wrist;
 
 public class RobotContainer {
   //Xbox controller in port 0
@@ -24,11 +25,15 @@ public class RobotContainer {
   //Create a SwerveDrive
   private final SwerveDrive drive = new SwerveDrive();
   private final Elevator elevator = new Elevator();
+  private final Wrist wrist = new Wrist();
 
   public RobotContainer() {
     configureBindings();
     SmartDashboard.putData("Setpoint -> 2", elevator.setSetpoint(2));
     SmartDashboard.putData("Setpoint -> 0", elevator.setSetpoint(0));
+
+    SmartDashboard.putData("Wrist Setpoint -> 45", wrist.setSetpoint(45));
+    SmartDashboard.putData("Wrist Setpoint -> -45", wrist.setSetpoint(-45));
   }
 
   private void configureBindings() {
