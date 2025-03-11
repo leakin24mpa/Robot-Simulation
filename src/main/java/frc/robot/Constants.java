@@ -178,6 +178,10 @@ public class Constants {
 
         public static final double gearRatio = 100;
         
+        public static final double minPosition = -60;
+        public static final double maxPosition = 100;
+        
+
         public static final double kP = 0.08;
         public static final double kI = 0;
         public static final double kD = 0;
@@ -189,12 +193,26 @@ public class Constants {
 
     }
     public class ScoringConstants{
+        public static final double safeZoneMaxAngle = 80;
+        public static final double safeZoneMaxHeight = 0.05;
+    
         public record ElevatorPose(
             double elevatorHeight,
             double armAngle
-        ){}
+        ){
+            public ElevatorPose makeSafe(){
+                double h = this.elevatorHeight;
+                double a = this.armAngle;
+                h = Math.min(Math.max(h, ElevatorConstants.minPosition), ElevatorConstants.maxPosition);
+                a = Math.min(Math.max(a, WristConstants.minPosition), WristConstants.maxPosition);
+                if(this.elevatorHeight() > safeZoneMaxHeight && this.armAngle() > safeZoneMaxAngle){
+                    a = safeZoneMaxAngle;
+                }
+                return new ElevatorPose(h, a);
+            }
+        }
         public enum PosePresets{
-            STOWED(new ElevatorPose(0, 90)),
+            STOWED(new ElevatorPose(0, 100)),
             INTAKE(new ElevatorPose(0.3, 55)),
             L1(new ElevatorPose(0.2, 10)),
             L2(new ElevatorPose(1, -35)),
@@ -205,6 +223,7 @@ public class Constants {
                 this.pose = p;
             }
         }
+
     }
 
     public class FieldConstants {

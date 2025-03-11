@@ -7,6 +7,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.ScoringConstants;
 import frc.robot.Constants.WristConstants;
 import frc.robot.subsystems.wrist.wristIO.NeoWristIO;
 import frc.robot.subsystems.wrist.wristIO.SimWristIO;
@@ -39,7 +40,9 @@ public class Wrist extends SubsystemBase{
             setpoint = angle;
         });
     }
-
+    public boolean isSafe(){
+        return getAngle().getDegrees() <= ScoringConstants.safeZoneMaxAngle;
+    }
 
     public boolean isAtSetpoint(){
         return Math.abs(setpoint - wristIO.getAngle().getDegrees()) < 1;

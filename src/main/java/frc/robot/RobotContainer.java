@@ -34,7 +34,7 @@ public class RobotContainer {
 
   private final Mechanism2d mech = new Mechanism2d(2, 4);
   private final MechanismRoot2d root = mech.getRoot("root", 1, 0);
-  private final MechanismLigament2d elevatorLigament = root.append(new MechanismLigament2d("elevator", 1, 90));
+  private final MechanismLigament2d elevatorLigament = root.append(new MechanismLigament2d("elevator", 0.2, 90));
   private final MechanismLigament2d wristLigament = elevatorLigament.append(new MechanismLigament2d("wrist", 0.4, 0));
   
   public RobotContainer() {
@@ -58,7 +58,7 @@ public class RobotContainer {
   }
 
   public void updateMechanism2d(){
-    elevatorLigament.setLength(1 + elevator.getPosition());
+    elevatorLigament.setLength(0.2 + elevator.getPosition());
     wristLigament.setAngle(wrist.getAngle().plus(Rotation2d.kCW_90deg));
   }
   public Command getAutonomousCommand() {

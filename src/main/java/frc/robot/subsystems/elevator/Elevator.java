@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ElevatorConstants;
+import frc.robot.Constants.ScoringConstants;
 import frc.robot.subsystems.elevator.elevatorIO.ElevatorIO;
 import frc.robot.subsystems.elevator.elevatorIO.NeoElevatorIO;
 import frc.robot.subsystems.elevator.elevatorIO.SimElevatorIO;
@@ -79,6 +80,9 @@ public class Elevator extends SubsystemBase{
         this.endState = new TrapezoidProfile.State(setpoint, 0);
         this.startState = elevatorIO.getState();
         timer.restart();
+    }
+    public boolean isSafe(){
+        return getPosition() <= ScoringConstants.safeZoneMaxHeight;
     }
     public Command setSetpointCommand(double setpoint){
         return runOnce(() -> {
