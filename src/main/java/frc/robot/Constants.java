@@ -5,6 +5,7 @@ import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
+import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -16,6 +17,7 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import frc.robot.Constants.SwerveConstants.ModuleLocation;
 
 public class Constants {
     public class SwerveConstants {
@@ -102,16 +104,9 @@ public class Constants {
         }
         
         public static ModuleData[] moduleData = {
-            //Module 0: Front Left
             new ModuleData(3, 2, 11, 160.2, ModuleLocation.FRONT_LEFT),
-
-            //Module 1: Back Left
             new ModuleData(5, 4, 12, 117.2, ModuleLocation.BACK_LEFT),
-
-            //Module 2: Back Right
             new ModuleData(7, 6, 13, 141, ModuleLocation.BACK_RIGHT),
-
-            //Module 3: Front RIght
             new ModuleData(9, 8, 14, -138, ModuleLocation.FRONT_RIGHT),
         };
 
@@ -136,10 +131,10 @@ public class Constants {
                             1);
         
         public static final RobotConfig ppConfig = new RobotConfig(75,6.8,ppModuleConfig, 
-            SwerveConstants.moduleData[0].getLocation(),
-            SwerveConstants.moduleData[1].getLocation(),
-            SwerveConstants.moduleData[2].getLocation(),
-            SwerveConstants.moduleData[3].getLocation());
+            ModuleLocation.FRONT_LEFT.position,
+            ModuleLocation.FRONT_RIGHT.position,
+            ModuleLocation.BACK_LEFT.position,
+            ModuleLocation.BACK_RIGHT.position);
 
         public static final PPHolonomicDriveController ppSwerveController = new PPHolonomicDriveController(
             new PIDConstants(5.0, 0.00001, 0.0), // Translation PID constants for path following
@@ -172,8 +167,8 @@ public class Constants {
 
         public static ElevatorFeedforward feedforward = new ElevatorFeedforward(kS, kG, kV);
 
-        public static double maxVelocity = 3.5;
-        public static double maxAcceleration = 0.8;
+        public static double maxVelocity = 1.5;
+        public static double maxAcceleration = 5;
 
         public static Constraints constraints = new Constraints(maxVelocity, maxAcceleration);
 
@@ -183,12 +178,33 @@ public class Constants {
 
         public static final double gearRatio = 100;
         
-        public static final double kP = 0.005;
-        public static final double kI = 0.001;
+        public static final double kP = 0.08;
+        public static final double kI = 0;
         public static final double kD = 0;
         public static final PIDController PID = new PIDController(kP, kI, kD);
 
+        public static final double kG = 0.0122;
+        public static final ArmFeedforward feedforward = new ArmFeedforward(0, kG,0);
 
+
+    }
+    public class ScoringConstants{
+        public record ElevatorPose(
+            double elevatorHeight,
+            double armAngle
+        ){}
+        public enum PosePresets{
+            STOWED(new ElevatorPose(0, 90)),
+            INTAKE(new ElevatorPose(0.3, 55)),
+            L1(new ElevatorPose(0.2, 10)),
+            L2(new ElevatorPose(1, -35)),
+            L3(new ElevatorPose(1.5, -35)),
+            L4(new ElevatorPose(2,85));
+            public ElevatorPose pose;
+            PosePresets(ElevatorPose p){
+                this.pose = p;
+            }
+        }
     }
 
     public class FieldConstants {

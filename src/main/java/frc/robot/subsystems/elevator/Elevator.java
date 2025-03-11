@@ -5,9 +5,6 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
-import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
-import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -27,9 +24,7 @@ public class Elevator extends SubsystemBase{
     private TrapezoidProfile.State startState;
     private Timer timer = new Timer();
 
-    private Mechanism2d elevatorVisual = new Mechanism2d(3,3);
-    private MechanismRoot2d root = elevatorVisual.getRoot("root", 2,0);
-    private MechanismLigament2d elevatorLigament = root.append(new MechanismLigament2d("elevator", 1, 90));
+
 
     public Elevator(){
         if(RobotBase.isSimulation()){
@@ -43,7 +38,6 @@ public class Elevator extends SubsystemBase{
         endState = new TrapezoidProfile.State(setpoint, 0);
         startState = endState;
 
-        SmartDashboard.putData("Elevator", elevatorVisual);
 
     }
 
@@ -60,7 +54,7 @@ public class Elevator extends SubsystemBase{
 
         SmartDashboard.putNumber("Elevator Actual Velocity", elevatorIO.getVelocity());
         SmartDashboard.putNumber("Elevator Actual Position", elevatorIO.getPosition());
-
+        SmartDashboard.putBoolean("Elevator Is At Setpoint", isAtSetpoint());
         SmartDashboard.putNumber("Elevator Motor Output", output);
 
         if(elevatorIO.isAtUpperBound() && output > 0){
@@ -74,22 +68,27 @@ public class Elevator extends SubsystemBase{
 
         elevatorIO.setSpeed(output);
     }
+    public double getPosition(){
+        return elevatorIO.getPosition();
+    }
     public boolean isAtSetpoint(){
         return Math.abs(setpoint - elevatorIO.getPosition()) < 0.01;
     }
-    public Command setSetpoint(double setpoint){
+    public void setSetpoint(double setpoint){
+        this.setpoint = setpoint;
+        this.endState = new TrapezoidProfile.State(setpoint, 0);
+        this.startState = elevatorIO.getState();
+        timer.restart();
+    }
+    public Command setSetpointCommand(double setpoint){
         return runOnce(() -> {
-            this.setpoint = setpoint;
-            this.endState = new TrapezoidProfile.State(setpoint, 0);
-            this.startState = elevatorIO.getState();
-            timer.restart();
+            setSetpoint(setpoint);
         });
     }
+    
     @Override
     public void periodic(){
         moveTowardsSetpoint();
         elevatorIO.update();
-        elevatorLigament.setLength(1 + elevatorIO.getPosition());
-        
     }
 }
