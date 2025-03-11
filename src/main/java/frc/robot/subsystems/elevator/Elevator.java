@@ -8,6 +8,8 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.lib.tunableControllers.TunableElevatorFeedforward;
+import frc.lib.tunableControllers.TunablePID;
 import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.ScoringConstants;
 import frc.robot.subsystems.elevator.elevatorIO.ElevatorIO;
@@ -16,8 +18,8 @@ import frc.robot.subsystems.elevator.elevatorIO.SimElevatorIO;
 
 public class Elevator extends SubsystemBase{
     private ElevatorIO elevatorIO; 
-    private PIDController pid = ElevatorConstants.PID;
-    private ElevatorFeedforward feedforward = ElevatorConstants.feedforward;
+    private TunablePID pid = new TunablePID("Elevator PID", ElevatorConstants.kP, ElevatorConstants.kI, ElevatorConstants.kD);//ElevatorConstants.PID;
+    private TunableElevatorFeedforward feedforward = new TunableElevatorFeedforward("Elevator FF", ElevatorConstants.kS, ElevatorConstants.kG, ElevatorConstants.kV);//ElevatorConstants.feedforward;
     private TrapezoidProfile profile = new TrapezoidProfile(ElevatorConstants.constraints);
 
     private double setpoint;
@@ -94,5 +96,7 @@ public class Elevator extends SubsystemBase{
     public void periodic(){
         moveTowardsSetpoint();
         elevatorIO.update();
+        pid.refresh();
+        feedforward.refresh();
     }
 }

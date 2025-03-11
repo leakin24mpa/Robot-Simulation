@@ -4,8 +4,10 @@ import edu.wpi.first.math.controller.ArmFeedforward;
 
 public class TunableArmFeedforward extends TunableController{
     private ArmFeedforward ff;
+    private static final String[] knames = {"kS", "kG", "kV"};
+
     public TunableArmFeedforward(String name, double kS, double kG, double kV){
-        super(name, kS, kG, kV);
+        super(name, knames, kS, kG, kV);
         ff = new ArmFeedforward(kS, kG, kV);
     }
     public double calculate(double positionRadians, double velocity){
@@ -13,7 +15,8 @@ public class TunableArmFeedforward extends TunableController{
     }
     @Override
     public void refresh(){
-        readValues();
-        ff = new ArmFeedforward(constants[0], constants[1], constants[2]);
+        if(parameterUpdate()){
+            ff = new ArmFeedforward(constants[0], constants[1], constants[2]);
+        }
     }
 }

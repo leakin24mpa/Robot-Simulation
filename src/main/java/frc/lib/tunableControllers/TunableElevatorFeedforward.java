@@ -4,8 +4,9 @@ import edu.wpi.first.math.controller.ElevatorFeedforward;
 
 public class TunableElevatorFeedforward extends TunableController{
     private ElevatorFeedforward ff;
+    private static final String[] knames = {"kS", "kG", "kV"};
     public TunableElevatorFeedforward(String name, double kS, double kG, double kV){
-        super(name, kS, kG, kV);
+        super(name, knames, kS, kG, kV);
         ff = new ElevatorFeedforward(kS, kG, kV);
     }
     public double calculate(double velocity){
@@ -13,7 +14,8 @@ public class TunableElevatorFeedforward extends TunableController{
     }
     @Override
     public void refresh(){
-        readValues();
-        ff = new ElevatorFeedforward(constants[0], constants[1], constants[2]);
+        if(parameterUpdate()){
+            ff = new ElevatorFeedforward(constants[0], constants[1], constants[2]);
+        }
     }
 }
