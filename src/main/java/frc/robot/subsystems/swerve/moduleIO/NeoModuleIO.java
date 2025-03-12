@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj.Timer;
 import frc.lib.CANSparkUtil;
 import frc.lib.CANSparkUtil.Usage;
 import frc.robot.Constants.SwerveConstants;
+import frc.robot.Constants.SwerveConstants.ModuleData;
 
 public class NeoModuleIO implements SwerveModuleIO{
     private final SparkFlex driveMotor;
@@ -39,19 +40,19 @@ public class NeoModuleIO implements SwerveModuleIO{
 
     private final SimpleMotorFeedforward feedforward;
 
-    public NeoModuleIO(int driveID, int angleID, int encoderID, double angleOffsetDegrees){
+    public NeoModuleIO(ModuleData data){
         //used for calibrating the absolute encoder so it knows which direction is zero
-        this.angleOffset = Rotation2d.fromDegrees(angleOffsetDegrees);
+        this.angleOffset = Rotation2d.fromDegrees(data.angleOffset());
 
         //one motor drives the wheel, the other motor steers it 
-        driveMotor = new SparkFlex(driveID, MotorType.kBrushless);
-        angleMotor = new SparkMax(angleID,MotorType.kBrushless);
+        driveMotor = new SparkFlex(data.driveMotorID(), MotorType.kBrushless);
+        angleMotor = new SparkMax(data.angleMotorID(),MotorType.kBrushless);
 
         //encoders measure how far the wheel has rolled and in what direction it's facing
         driveEncoder = driveMotor.getEncoder();
         angleEncoder = angleMotor.getEncoder();
         //the absolute encoder tells the relative encoder which way the wheel is facing when the code first starts up
-        absoluteEncoder = new CANcoder(encoderID);
+        absoluteEncoder = new CANcoder(data.encoderID());
 
         //PID & feedforward  controllers bring the wheel to its desired direction and speed
         drivePID = driveMotor.getClosedLoopController();

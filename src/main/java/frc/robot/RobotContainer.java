@@ -26,7 +26,6 @@ import frc.robot.subsystems.wrist.Wrist;
 public class RobotContainer {
   //Xbox controller in port 0
   private final XboxController xbox = new XboxController(0);
-  private final CommandJoystick js = new CommandJoystick(1);
 
   //Create a SwerveDrive
   private final SwerveDrive drive = new SwerveDrive();
@@ -55,7 +54,7 @@ public class RobotContainer {
 
   private void configureBindings() {
     //enable the TeleopSwerve command by default, and pass joystick inputs to the TeleopSwerve command
-    drive.setDefaultCommand(new TeleopSwerve(drive, () -> -xbox.getLeftX(), () -> -xbox.getLeftY(), () -> -js.getRawAxis(0)));
+    drive.setDefaultCommand(new TeleopSwerve(drive, () -> -xbox.getLeftX(), () -> -xbox.getLeftY(), () -> xbox.getRightX()));
   }
 
   public void updateMechanism2d(){

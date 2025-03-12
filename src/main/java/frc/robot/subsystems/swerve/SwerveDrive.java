@@ -54,7 +54,7 @@ public class SwerveDrive extends SubsystemBase {
     swerveModules = new SwerveModule[4];
     for(int i = 0; i < 4; i++){
       ModuleData data = SwerveConstants.moduleData[i];
-      swerveModules[i] = new SwerveModule(i,data.driveMotorID(), data.angleMotorID(), data.encoderID(), data.angleOffset());
+      swerveModules[i] = new SwerveModule(i,data);
     }
 
     //set the gyro heading to zero to start

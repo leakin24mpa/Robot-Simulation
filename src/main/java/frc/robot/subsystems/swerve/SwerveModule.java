@@ -8,6 +8,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.RobotBase;
+import frc.robot.Constants.SwerveConstants.ModuleData;
 import frc.robot.subsystems.swerve.moduleIO.NeoModuleIO;
 import frc.robot.subsystems.swerve.moduleIO.SimModuleIO;
 import frc.robot.subsystems.swerve.moduleIO.SwerveModuleIO;
@@ -18,14 +19,14 @@ public class SwerveModule {
     private final SwerveModuleIO moduleIO;
     public final int moduleNumber;
     
-    public SwerveModule(int moduleNumber, int driveID, int angleID, int encoderID, double angleOffsetDegrees){
+    public SwerveModule(int moduleNumber, ModuleData data){
         //identifies which of the four modules this is
         this.moduleNumber = moduleNumber;
         if(RobotBase.isSimulation()){
             moduleIO = new SimModuleIO();
         }
         else{
-            moduleIO = new NeoModuleIO(driveID, angleID, encoderID, angleOffsetDegrees);
+            moduleIO = new NeoModuleIO(data);
         }
         
     }
@@ -49,7 +50,6 @@ public class SwerveModule {
             turnAmount += 180;
             speed *= -1;
         }
-        
         double direction = currentAngle.getDegrees() + turnAmount;
         //return the updated speed and directionwa
         return new SwerveModuleState(speed, Rotation2d.fromDegrees(direction));
@@ -59,8 +59,10 @@ public class SwerveModule {
         //optimize the desired state to get the module to its goal as fast as possible
         SwerveModuleState optimizedState = optimize(desiredState, getAngle());
         
+        double cosineComp = optimizedState.angle.minus(getAngle()).getCos();
+
         moduleIO.setAngle(optimizedState.angle);
-        moduleIO.setSpeed(optimizedState.speedMetersPerSecond, isOpenLoop);
+        moduleIO.setSpeed(optimizedState.speedMetersPerSecond * cosineComp, isOpenLoop);
         return optimizedState;
     }
    
