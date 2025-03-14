@@ -217,7 +217,7 @@ public class Constants {
             L1(new ElevatorPose(0.2, 10)),
             L2(new ElevatorPose(1, -35)),
             L3(new ElevatorPose(1.5, -35)),
-            L4(new ElevatorPose(2,85));
+            L4(new ElevatorPose(2,80));
             public ElevatorPose pose;
             PosePresets(ElevatorPose p){
                 this.pose = p;

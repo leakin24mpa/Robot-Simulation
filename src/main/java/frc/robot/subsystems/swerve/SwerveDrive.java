@@ -8,6 +8,7 @@ import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.Pigeon2;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.trajectory.PathPlannerTrajectoryState;
 
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -141,6 +142,17 @@ public class SwerveDrive extends SubsystemBase {
       DriverStation.reportError("The path is not pathing: " + e.getMessage(), e.getStackTrace());
       return null;
     }
+  }
+  public Command driveToPose(Pose2d pose){
+    return run(() -> {
+      PathPlannerTrajectoryState goalState = new PathPlannerTrajectoryState();
+      goalState.pose = pose;
+      ChassisSpeeds drivingSpeed = AutoConstants.ppSwerveController.calculateRobotRelativeSpeeds(getRobotPose(), goalState);
+      driveFromChassisSpeeds(drivingSpeed, false);
+    }).until(() -> {
+      Pose2d relative = pose.relativeTo(getRobotPose());
+      return relative.getTranslation().getNorm() < 0.03 && relative.getRotation().getCos() > 0.95;
+    });
   }
 
   public SwerveModuleState[] getStates(){

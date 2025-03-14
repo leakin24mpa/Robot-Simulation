@@ -14,10 +14,9 @@ import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 
 import frc.robot.Constants.ScoringConstants.PosePresets;
-import frc.robot.commands.SetElevatorPose;
+import frc.robot.commands.SetElevatorPoseV2;
 import frc.robot.commands.TeleopSwerve;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.swerve.SwerveDrive;
@@ -48,7 +47,7 @@ public class RobotContainer {
     SmartDashboard.putData("Wrist Setpoint -> -45", wrist.setSetpointCommand(-45));
 
     for(PosePresets preset : PosePresets.values()){
-      SmartDashboard.putData("Set Pose To: " + preset.toString(), new SetElevatorPose(elevator, wrist, preset));
+      SmartDashboard.putData("Set Pose To: " + preset.toString(), new SetElevatorPoseV2(elevator, wrist, preset.pose));
     }
   }
 
