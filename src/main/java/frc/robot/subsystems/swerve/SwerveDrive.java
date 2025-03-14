@@ -130,13 +130,26 @@ public class SwerveDrive extends SubsystemBase {
     driveFromChassisSpeeds(desiredSpeeds, true);
   }
   
-  public Command setStartingPose(Pose2d pose){
-    return runOnce(() -> setRobotPose(FieldConstants.flipForAlliance(pose)));
+  public Command setStartingPose(double x, double y, double degrees){
+    return runOnce(() -> {
+      double newY = y;
+      if(AutoConstants.isRightSideAuto()){
+        newY = FieldConstants.FIELD_WIDTH - y;
+      }
+      Pose2d pose = new Pose2d(x, newY, Rotation2d.fromDegrees(degrees));
+      pose = FieldConstants.flipForAlliance(pose);
+      setRobotPose(pose);
+    });
   }
   public Command autoDrive(String filename){
     try{
       PathPlannerPath path = PathPlannerPath.fromPathFile(filename);
-      return AutoBuilder.followPath(path);
+      if(AutoConstants.isRightSideAuto()){
+        return AutoBuilder.followPath(path.mirrorPath());
+      }
+      else{
+        return AutoBuilder.followPath(path);
+      }
     }
     catch(Exception e){
       DriverStation.reportError("The path is not pathing: " + e.getMessage(), e.getStackTrace());

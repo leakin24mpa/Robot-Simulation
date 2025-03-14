@@ -5,7 +5,7 @@
 package frc.robot;
 
 
-import edu.wpi.first.math.geometry.Pose2d;
+
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
@@ -13,9 +13,10 @@ import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-
+import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.ScoringConstants.PosePresets;
+import frc.robot.auto.LeaveAreaAuto;
+import frc.robot.auto.CircleDriveAuto;
 import frc.robot.commands.SetElevatorPoseV2;
 import frc.robot.commands.TeleopSwerve;
 import frc.robot.subsystems.elevator.Elevator;
@@ -61,10 +62,11 @@ public class RobotContainer {
     wristLigament.setAngle(wrist.getAngle().plus(Rotation2d.kCW_90deg));
   }
   public Command getAutonomousCommand() {
-    return new SequentialCommandGroup(
-          drive.setStartingPose(new Pose2d(2, 7, Rotation2d.fromDegrees(180))),
-          drive.autoDrive("Pathy McPathFace"),
-          drive.autoDrive("Path2")
-          );
+    switch(AutoConstants.getSelectedAuto()){
+      case TEST_AUTO:
+        return new CircleDriveAuto(drive, elevator, wrist);
+      default:
+        return new LeaveAreaAuto(drive, elevator, wrist);
+    }
   }
 }

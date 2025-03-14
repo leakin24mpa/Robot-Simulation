@@ -17,6 +17,8 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.SwerveConstants.ModuleLocation;
 
 public class Constants {
@@ -122,6 +124,30 @@ public class Constants {
     }
     
     public class AutoConstants {
+        public enum AutoMode{
+            TEST_AUTO,
+            LEAVE_AREA,
+        }
+        private static SendableChooser<Boolean> sideChooser = new SendableChooser<Boolean>();
+        private static SendableChooser<AutoMode> autoModeChooser = new SendableChooser<AutoMode>();
+        static{
+            sideChooser.addOption("RIGHT", true);
+            sideChooser.setDefaultOption("LEFT", false);
+
+            for(AutoMode mode : AutoMode.values()){
+                autoModeChooser.addOption(mode.toString(), mode);
+            }
+            autoModeChooser.setDefaultOption("LEAVE_AREA", AutoMode.LEAVE_AREA);
+            SmartDashboard.putData("Auto Starting Location", sideChooser);
+            SmartDashboard.putData("Auto Mode", autoModeChooser);
+        }
+        public static AutoMode getSelectedAuto(){
+            return autoModeChooser.getSelected();
+        }
+        public static boolean isRightSideAuto(){
+            return sideChooser.getSelected();
+        }
+        
         public static final ModuleConfig ppModuleConfig = 
             new ModuleConfig(SwerveConstants.wheelDiameter / 2,
                             SwerveConstants.maxSpeed,
