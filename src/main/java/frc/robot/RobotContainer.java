@@ -54,7 +54,7 @@ public class RobotContainer {
 
   private void configureBindings() {
     //enable the TeleopSwerve command by default, and pass joystick inputs to the TeleopSwerve command
-    drive.setDefaultCommand(new TeleopSwerve(drive, () -> -xbox.getLeftX(), () -> -xbox.getLeftY(), () -> xbox.getRightX()));
+    drive.setDefaultCommand(new TeleopSwerve(drive, () -> -xbox.getLeftX(), () -> -xbox.getLeftY(), () -> xbox.getRightX(), () -> xbox.getRawButton(1)));
   }
 
   public void updateMechanism2d(){
