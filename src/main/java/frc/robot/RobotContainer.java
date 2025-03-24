@@ -7,16 +7,17 @@ package frc.robot;
 
 
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.ScoringConstants.PosePresets;
 import frc.robot.auto.LeaveAreaAuto;
 import frc.robot.auto.CircleDriveAuto;
+import frc.robot.commands.ReefAutoAlign;
 import frc.robot.commands.SetElevatorPoseV2;
 import frc.robot.commands.TeleopSwerve;
 import frc.robot.subsystems.elevator.Elevator;
@@ -25,7 +26,7 @@ import frc.robot.subsystems.wrist.Wrist;
 
 public class RobotContainer {
   //Xbox controller in port 0
-  private final XboxController xbox = new XboxController(0);
+  private final CommandXboxController xbox = new CommandXboxController(0);
 
   //Create a SwerveDrive
   private final SwerveDrive drive = new SwerveDrive();
@@ -54,7 +55,9 @@ public class RobotContainer {
 
   private void configureBindings() {
     //enable the TeleopSwerve command by default, and pass joystick inputs to the TeleopSwerve command
-    drive.setDefaultCommand(new TeleopSwerve(drive, () -> -xbox.getLeftX(), () -> -xbox.getLeftY(), () -> xbox.getRightX(), () -> xbox.getRawButton(1)));
+    drive.setDefaultCommand(new TeleopSwerve(drive, () -> -xbox.getLeftX(), () -> -xbox.getLeftY(), () -> xbox.getRightX()));
+    xbox.button(1).whileTrue(new ReefAutoAlign(drive, true));
+    xbox.button(2).whileTrue(new ReefAutoAlign(drive, false));
   }
 
   public void updateMechanism2d(){

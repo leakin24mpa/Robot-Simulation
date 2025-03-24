@@ -35,6 +35,7 @@ public class SwerveDrive extends SubsystemBase {
 
   private final SwerveModule[] swerveModules;
   private final Pigeon2 gyro;
+ 
 
   private final StructArrayPublisher<SwerveModuleState> swerveDataPublisher = NetworkTableInstance.getDefault()
 .getStructArrayTopic("Swerve States", SwerveModuleState.struct).publish();
@@ -44,8 +45,11 @@ public class SwerveDrive extends SubsystemBase {
 
   private final SwerveDrivePoseEstimator odometry;
   private final Field2d field;
+
   /** Creates a new SwerveDrive. */
   public SwerveDrive() {
+    
+
     //A pigeon2 gyro
     gyro = new Pigeon2(SwerveConstants.gyro_ID);
     //clear all the old settings on the gyro
@@ -60,7 +64,7 @@ public class SwerveDrive extends SubsystemBase {
 
     //set the gyro heading to zero to start
     zeroGyro();
-    odometry = new SwerveDrivePoseEstimator(SwerveConstants.swerveKinematics, getYaw(), getAllModulePositions(), new Pose2d());
+    odometry = new Odometry(SwerveConstants.swerveKinematics, getAllModulePositions(), new Pose2d(), true);
     field = new Field2d();
 
     configurePathPlanner();
@@ -89,13 +93,16 @@ public class SwerveDrive extends SubsystemBase {
     }
   }
   //get the output of the pigeon2 as a rotation2d
-  public Rotation2d getYaw(){
+  private Rotation2d getInputYaw(){
     if(SwerveConstants.invertGyro){
       return Rotation2d.fromDegrees(gyro.getYaw().getValueAsDouble());
     }
     else{
       return Rotation2d.fromDegrees(360 - gyro.getYaw().getValueAsDouble());
     }
+  }
+  public Rotation2d getYaw(){
+    return getRobotPose().getRotation();
   }
   public void setRobotPose(Pose2d pose){
     gyro.setYaw(pose.getRotation().getMeasure());
@@ -206,7 +213,10 @@ public class SwerveDrive extends SubsystemBase {
 
   @Override
   public void periodic(){
-    odometry.update(getYaw(), getAllModulePositions());
+    
+    odometry.update(getInputYaw(), getAllModulePositions());
+    
+    
     
     updateOdometryWithVision();
     

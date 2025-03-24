@@ -4,14 +4,14 @@
 
 package frc.robot.commands;
 
-import java.util.function.BooleanSupplier;
+
 import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.math.filter.SlewRateLimiter;
+
 import edu.wpi.first.wpilibj2.command.Command;
-import static  frc.robot.Constants.FieldConstants.*;
+
 import frc.robot.Constants.SwerveConstants;
-import frc.robot.commands.AutoAlign.AutoAlignOutput;
 import frc.robot.subsystems.swerve.SwerveDrive;
 
 public class TeleopSwerve extends Command {
@@ -20,16 +20,13 @@ public class TeleopSwerve extends Command {
   private final DoubleSupplier m_xInput;
   private final DoubleSupplier m_yInput;
   private final DoubleSupplier m_rotationInput;
-  private final BooleanSupplier m_isAutoAlignSupplier;
 
   private final SlewRateLimiter m_xRateLimiter;
   private final SlewRateLimiter m_yRateLimiter;
   private final SlewRateLimiter m_rotationRateLimiter;
 
-  private final AutoAlign m_AutoAlign;
-
   /** Creates a new TeleopSwerve. */
-  public TeleopSwerve(SwerveDrive drive, DoubleSupplier xInput, DoubleSupplier yInput, DoubleSupplier rotationInput, BooleanSupplier isAutoAlignInput) {
+  public TeleopSwerve(SwerveDrive drive, DoubleSupplier xInput, DoubleSupplier yInput, DoubleSupplier rotationInput) {
     /*This tells the code that the swerveDrive subsystem is 'busy' 
     while this command is running so it doesn't accidentally get
     asked to do something else by another command.*/
@@ -41,9 +38,6 @@ public class TeleopSwerve extends Command {
     m_xInput = xInput;
     m_yInput = yInput;
     m_rotationInput = rotationInput;
-    m_isAutoAlignSupplier = isAutoAlignInput;
-
-    m_AutoAlign = new AutoAlign();
 
     //Slew rate limiters smooth out sudden changes in the joystick inputs. This helps the robot move more smoothly and not tip over.
     m_xRateLimiter = new SlewRateLimiter(SwerveConstants.translationSlewRateLimit);
@@ -68,17 +62,8 @@ public class TeleopSwerve extends Command {
     double xSpeed = smoothedXinput * SwerveConstants.maxSpeed;
     double ySpeed = smoothedYinput * SwerveConstants.maxSpeed;
     double rotationSpeed = smoothedRotationinput * SwerveConstants.maxAngularVelocity;
+      
+    m_Drive.teleopDrive(xSpeed, ySpeed, rotationSpeed, true);
     
-    AutoAlignOutput output = m_AutoAlign.calculate(m_Drive.getRobotPose(), flipForAlliance(BLUE_REEF_CENTER), 1, smoothedYinput);
-    //send the speeds to the swerveDrive to make it drive. 
-    if(m_isAutoAlignSupplier.getAsBoolean()){
-      m_Drive.teleopDrive(output.xOutput * SwerveConstants.maxSpeed, output.yOutput * SwerveConstants.maxSpeed, rotationSpeed * SwerveConstants.maxAngularVelocity, true);
-    }
-    else{
-      m_Drive.teleopDrive(xSpeed, ySpeed, rotationSpeed, true);
-    }
-    
-
-
   }
 }
