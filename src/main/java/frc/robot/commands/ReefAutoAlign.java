@@ -42,33 +42,32 @@ public class ReefAutoAlign extends Command{
     }
 
     private ChassisSpeeds calculate(Pose2d currentPose, Translation2d target, double scoreDistance, double scoreOffset, boolean isRightSide){
-        Translation2d offset = currentPose.getTranslation().minus(target);
-        double goalAngle = Math.round((offset.getAngle().getDegrees()) / 60) * 60; 
-        Rotation2d goalRotation = Rotation2d.fromDegrees(goalAngle);
-
-        double nx = goalRotation.getCos();
-        double ny = goalRotation.getSin();
-
-        double tx = -ny;
-        double ty = nx;
-
         if(isRightSide){
             scoreOffset *= -1;
         }
+        Translation2d scoringLocation = new Translation2d(scoreDistance, scoreOffset);
 
-        double goalX = target.getX() + scoreDistance * nx + scoreOffset * tx;
-        double goalY = target.getY() + scoreDistance * ny + scoreOffset * ty;
+        //get the robot's location relative to the reef
+        Translation2d offset = currentPose.getTranslation().minus(target);
+
+        //round the direction to the nearest multiple of 60 degrees (closest face of the reef)
+        double goalAngle = Math.round((offset.getAngle().getDegrees()) / 60) * 60; 
+        Rotation2d goalRotation = Rotation2d.fromDegrees(goalAngle);
+
+        scoringLocation = scoringLocation.rotateBy(goalRotation);
+
+        scoringLocation = scoringLocation.plus(target);
 
         double rotationOutput = rotationPID.calculate(currentPose.getRotation().getDegrees(), goalAngle + 180);
         
-        double xOutput = xPID.calculate(currentPose.getX(), goalX);
-        double yOutput = yPID.calculate(currentPose.getY(), goalY);
+        double xOutput = xPID.calculate(currentPose.getX(), scoringLocation.getX());
+        double yOutput = yPID.calculate(currentPose.getY(), scoringLocation.getY());
 
         xOutput = MathUtil.clamp(xOutput, -maxOutput, maxOutput);
         yOutput = MathUtil.clamp(yOutput, -maxOutput, maxOutput);
-        
 
-        goalPosePublisher.set(new Pose2d(goalX, goalY, goalRotation));
+
+        goalPosePublisher.set(new Pose2d(scoringLocation.getX(), scoringLocation.getY(), goalRotation));
         return new ChassisSpeeds(xOutput, yOutput, rotationOutput);
     }
 }
