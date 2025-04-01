@@ -4,13 +4,11 @@
 
 package frc.robot.subsystems.swerve;
 
-import com.ctre.phoenix6.configs.Pigeon2Configuration;
-import com.ctre.phoenix6.hardware.Pigeon2;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.trajectory.PathPlannerTrajectoryState;
 
-import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -20,6 +18,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -30,11 +29,13 @@ import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.SwerveConstants;
 import frc.robot.Constants.SwerveConstants.ModuleData;
+import frc.robot.subsystems.swerve.odometry.Pigeon2Odometry;
+import frc.robot.subsystems.swerve.odometry.SimOdometry;
+import frc.robot.subsystems.swerve.odometry.SwerveOdometryIO;
 
 public class SwerveDrive extends SubsystemBase {
 
   private final SwerveModule[] swerveModules;
-  private final Pigeon2 gyro;
  
 
   private final StructArrayPublisher<SwerveModuleState> swerveDataPublisher = NetworkTableInstance.getDefault()
@@ -43,17 +44,12 @@ public class SwerveDrive extends SubsystemBase {
   private final StructArrayPublisher<SwerveModuleState> desiredSwerveDataPublisher = NetworkTableInstance.getDefault()
   .getStructArrayTopic("Desired Swerve States", SwerveModuleState.struct).publish();
 
-  private final SwerveDrivePoseEstimator odometry;
+  private final SwerveOdometryIO odometry;
   private final Field2d field;
 
   /** Creates a new SwerveDrive. */
   public SwerveDrive() {
     
-
-    //A pigeon2 gyro
-    gyro = new Pigeon2(SwerveConstants.gyro_ID);
-    //clear all the old settings on the gyro
-    gyro.getConfigurator().apply(new Pigeon2Configuration());
 
     //A list of the 4 swerve modules
     swerveModules = new SwerveModule[4];
@@ -61,10 +57,13 @@ public class SwerveDrive extends SubsystemBase {
       ModuleData data = SwerveConstants.moduleData[i];
       swerveModules[i] = new SwerveModule(i,data);
     }
+    if(RobotBase.isSimulation()){
+      odometry = new SimOdometry(SwerveConstants.swerveKinematics, this::getAllModulePositions);
+    }
+    else{
+      odometry = new Pigeon2Odometry(SwerveConstants.swerveKinematics, this::getAllModulePositions, SwerveConstants.gyro_ID);
+    }
 
-    //set the gyro heading to zero to start
-    zeroGyro();
-    odometry = new Odometry(SwerveConstants.swerveKinematics, getAllModulePositions(), new Pose2d(), true);
     field = new Field2d();
 
     configurePathPlanner();
@@ -86,30 +85,21 @@ public class SwerveDrive extends SubsystemBase {
   // but on red it resets to 180
   public void zeroGyro(){
     if(FieldConstants.isRedAlliance()){
-      gyro.setYaw(180);
+      odometry.setGyroHeading(Rotation2d.fromDegrees(180));
     }
     else{
-      gyro.setYaw(0);
+      odometry.setGyroHeading(Rotation2d.fromDegrees(0));
     }
   }
-  //get the output of the pigeon2 as a rotation2d
-  private Rotation2d getInputYaw(){
-    if(SwerveConstants.invertGyro){
-      return Rotation2d.fromDegrees(gyro.getYaw().getValueAsDouble());
-    }
-    else{
-      return Rotation2d.fromDegrees(360 - gyro.getYaw().getValueAsDouble());
-    }
-  }
+
   public Rotation2d getYaw(){
     return getRobotPose().getRotation();
   }
   public void setRobotPose(Pose2d pose){
-    gyro.setYaw(pose.getRotation().getMeasure());
-    odometry.resetPosition(pose.getRotation(), getAllModulePositions(), pose);
+    odometry.setRobotPose(pose);
   }
   public Pose2d getRobotPose(){
-    return odometry.getEstimatedPosition();
+    return odometry.getRobotPose();
   }
 
   //get an array conataining all four modules' positions
@@ -214,7 +204,7 @@ public class SwerveDrive extends SubsystemBase {
   @Override
   public void periodic(){
     
-    odometry.update(getInputYaw(), getAllModulePositions());
+    odometry.update();
     
     
     
